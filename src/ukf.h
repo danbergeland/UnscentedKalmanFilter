@@ -25,6 +25,12 @@ public:
 
   ///* state vector: [pos1 pos2 vel_abs yaw_angle yaw_rate] in SI units and rad
   VectorXd x_;
+  
+  ///* state vector: predicted z: rho, phi, rho_dot
+  VectorXd z_;
+  
+  ///* Measurement space covariance matrix
+  MatrixXd S_;
 
   ///* state covariance matrix
   MatrixXd P_;
@@ -56,11 +62,26 @@ public:
   ///* Radar measurement noise standard deviation radius change in m/s
   double std_radrd_ ;
 
+  ///* Q matrix for updates
+  MatrixXd Q_;
+  
+  ///*R matrix for radar updates
+  MatrixXd R_;
+
   ///* Weights of sigma points
   VectorXd weights_;
+  
+  ///*Augmented sigma matrix
+  MatrixXd Xsig_aug_;
+  
+  ///*Zsig radar prediction
+  MatrixXd Zsig_;
 
   ///* State dimension
   int n_x_;
+  
+  ///* Radar dimension
+  int n_z_;
 
   ///* Augmented state dimension
   int n_aug_;
@@ -108,6 +129,35 @@ public:
    * @param meas_package The measurement at k+1
    */
   void UpdateRadar(MeasurementPackage meas_package);
+  
+   /**
+   * Generates Sigma Points, given current x_, P_ and lamda
+   * @param Provide a pointer to a MatrixXd.  The Sigma Points matrix will update Xsig_out
+   */
+  void GenerateSigmaPoints(MatrixXd* Xsig_out);
+     /**
+   * Generates Augmented Sigma Points, given current x_, P_, lamda and Q_laser
+
+   */
+  void AugmentedSigmaPoints(void);
+  
+   /**
+   * Updates class Xsig_pred matrix, based on in augmented sigma matrix.
+   * @param Xsig_aug is the augmented laser matrix, dt is the time step in seconds
+   */
+  void SigmaPointPrediction(float dt);
+  
+  /**
+   * Updates x_ and P_ based on current augmented sigma points matrix
+   * 
+   */
+  void PredictMeanAndCovariance(void);
+  
+   /**
+   * Updates class Xsig_pred matrix, based on in augmented sigma matrix.
+   * @param z_out is the predicted radar value, S_out is the predicted covariance
+   */
+  void PredictRadarMeasurement(void);
 };
 
 #endif /* UKF_H */
